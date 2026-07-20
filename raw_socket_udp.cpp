@@ -159,91 +159,91 @@ unsigned short checksum(unsigned short* buff, int len_16)
 
 int buff_init()
 {
-    int data_len = 0;
+	int data_len = 0;
 
-    memset(sendbuff, 0, PACKET_LEN);  //패킷 렝스만큼 0으로 채우겠다. -> 0번부터 
+	memset(sendbuff, 0, PACKET_LEN);  //패킷 렝스만큼 0으로 채우겠다. -> 0번부터 
 
-    //-----------------------------------
-    // IP
+	//-----------------------------------
+	// IP
 	// 0x45 ==> 4 bit : version (4 : IPv4), 4 bit : header length (5-> 5*4=20 bytes)
 	sendbuff[0] = 0x45; // IP version and header length
-    // TOS
+	// TOS
 	sendbuff[1] = 0x00; // Type of Service
 
 	// Total Length : 이더넷 frame header를 제외한 모든 데이터 길이 (IP header + UDP header + data)
-	// Little-endian : 0x1234 -> 메모리에 들어갈 때에는 32 12 순서로 들어감
+	// Little-endian : 0x1234 -> 메모리에 들어갈 때에는 34 12 순서로 들어감
 	// Big-endian : 0x1234 -> 네트워크로 나갈 때에는 패킷들이 12 34 순서로 나감 
-    short total_length = 20 + 8 + 4; // IP header (20 bytes) + UDP header (8 bytes) + data (4 bytes)
-	sendbuff[2] = (total_length >> 8) & 0xFF; //비트를 오른쪽으로 8번 시프트. (&:비트연산.). 0xFF : 하위는 1, 상위는 0. 8bit만 남기고 나머지는 0으로
-    sendbuff[3] = total_length & 0xFF;
-    
+	short total_length = 20 + 8 + 4; // IP header (20 bytes) + UDP header (8 bytes) + data (4 bytes)
+	sendbuff[2] = (total_length >> 8) & 0xff; //비트를 오른쪽으로 8번 시프트. (&:비트연산.). 0xff : 하위는 1, 상위는 0. 8bit만 남기고 나머지는 0으로
+	sendbuff[3] = total_length & 0xff;
+
 	// IP Identification : IP 패킷을 구분하기 위한 ID
-    short ip_id = 0x00;
+	short ip_id = 0x00;
 	sendbuff[4] = (ip_id >> 8) & 0xff;
 	sendbuff[5] = ip_id & 0xff;
-    
+
 	// Flag / Fragment Offset : 3 bit : flags, 13 bit : fragment offset
 	sendbuff[6] = 0x00; // Flags
 	sendbuff[7] = 0x00; // Fragment Offset
 
 	// TTL : Time To Live
-    sendbuff[8] = 128;
+	sendbuff[8] = 128;
 
 	// protocol : UDP - 17, TCP - 6
-	sendbuff[9] = 17; // Protocol]
+	sendbuff[9] = 17; // Protocol
 
 	// IP Header Checksum : IP header의 오류 검출을 위한 checksum
-    sendbuff[10] = 0;
+	sendbuff[10] = 0;
 	sendbuff[11] = 0;
 
 	// Source IP 
-    sendbuff[12] = 172;
-    sendbuff[13] = 30;
-    sendbuff[14] = 1;
-    sendbuff[15] = 93; //이건 빅엔디안이어서 그냥 차례대로 넣으면 됨
+	sendbuff[12] = 172;
+	sendbuff[13] = 30;
+	sendbuff[14] = 1;
+	sendbuff[15] = 93; //이건 빅엔디안이어서 그냥 차례대로 넣으면 됨
 
 	// destination IP  (친구 주소)
-    sendbuff[16] = 172;
-    sendbuff[17] = 30;
-    sendbuff[18] = 1;
-    sendbuff[19] = 60;  
+	sendbuff[16] = 172;
+	sendbuff[17] = 30;
+	sendbuff[18] = 1;
+	sendbuff[19] = 60;  
 
-    // IP Header Checksum 계산. 헤더첵섬은 2바이트. 
+	// IP Header Checksum 계산. 헤더첵섬은 2바이트. 
 	unsigned short header_checksum = checksum((unsigned short*)&sendbuff[0], 20 / 2); // 20/2 : 2바이트 단위로 10개. IP header 길이 20 bytes
 	sendbuff[10] = (header_checksum >> 8) & 0xff; // 상위 8bit
-	sendbuff[11] = header_checksum & 0xff; // 하위 8b
+	sendbuff[11] = header_checksum & 0xff; // 하위 8bit
 
-    //-----------------------------------
+	//-----------------------------------
 	// UDP Header
 	// Source Port
 	unsigned short udp_source_port = 3000;
 	sendbuff[20] = (udp_source_port >> 8) & 0xff; // 상위 8bit만
-    sendbuff[21] = udp_source_port & 0xff; // 하위 8bit
+	sendbuff[21] = udp_source_port & 0xff; // 하위 8bit
 
 	// Destination Port
-    unsigned short udp_destination_port = 4000;
-    sendbuff[22] = (udp_destination_port >> 8) & 0xff; // 상위 8bit만
-    sendbuff[23] = udp_destination_port & 0xff; // 하위 8bit
-    
+	unsigned short udp_destination_port = 4000;
+	sendbuff[22] = (udp_destination_port >> 8) & 0xff; // 상위 8bit만
+	sendbuff[23] = udp_destination_port & 0xff; // 하위 8bit
+
 	// Length : UDP header + data length
 	unsigned short udp_total_length = 8 + 4; // UDP header (8 bytes) + data (4 bytes)
-    sendbuff[24] = (udp_total_length >> 8) & 0xff; // 상위 8bit
-    sendbuff[25] = udp_total_length & 0xff; // 하위 8bit
+	sendbuff[24] = (udp_total_length >> 8) & 0xff; // 상위 8bit
+	sendbuff[25] = udp_total_length & 0xff; // 하위 8bit
 
 	// Checksum : UDP header + data의 오류 검출을 위한 checksum
 	sendbuff[26] = 0;
 	sendbuff[27] = 0;
 
-    //-----------------------------------
-    // data
-    sendbuff[28] = 'h';
-    sendbuff[29] = 'o';
-    sendbuff[30] = 'h';
-    sendbuff[31] = 'o';
+	//-----------------------------------
+	// data
+	sendbuff[28] = 'h';
+	sendbuff[29] = 'o';
+	sendbuff[30] = 'h';
+	sendbuff[31] = 'o';
 
-    //-----------------------------------
-    data_len = 32;
-    //-----------------------------------
+	//-----------------------------------
+	data_len = 32;
+	//-----------------------------------
 
-    return data_len;
+	return data_len;
 }

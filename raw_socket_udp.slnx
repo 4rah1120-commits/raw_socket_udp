@@ -3,5 +3,5 @@
     <Platform Name="x64" />
     <Platform Name="x86" />
   </Configurations>
-  <Project Path="raw_socket_udp.vcxproj" />
+  <Project Path="raw_socket_udp.vcxproj" Id="23588d28-65b8-4dc4-ba84-221c28a31fb6" />
 </Solution>
