@@ -156,12 +156,71 @@ unsigned short checksum(unsigned short* buff, int len_16)
 }
 
 
+struct ipheader* ip_header_p = (struct ipheader*)&sendbuff;  //선언 ipheader
+// ipheader구조체 안에 있는 멤버들을 sendbuff 배열의 주소로 연결
+
+
+
+
+
 
 int buff_init()
 {
-	int data_len = 0;
+	int data_len = 4; // '하하' 가 4bytes이므로 4로 초기화. 여기가 0이면 보낼 내용이 없다는 말
 
 	memset(sendbuff, 0, PACKET_LEN);  //패킷 렝스만큼 0으로 채우겠다. -> 0번부터 
+
+	// sendbuff : char 타입의 1500바이트 길이의 배열
+	// ip_header_p : (struct ipheader*) 포인터인데, struct ipheader 타입의 주소를 담는 변수이다
+	// 그래서 1byte씩 증가하는 sendbuff sendbuff에서 struct ipheade 구조체 멤버의 변수를 그대로 사용 가능
+	
+	//=================================================================
+	// header 선언
+
+	struct ipheader* ip_header_p = (struct ipheader*)&sendbuff;  //선언 ipheader
+
+
+	struct udpheader* udp_header_p = (struct udpheader *)(sendbuff + sizeof(struct ipheader));
+		// 센드버프 자체는 포인터. 배열의 주소. 여서, +1 하면 다음 캐릭터 주소
+		// 그 주소에 struct ipheader 구조체 크기를 더한 위치 = udp헤더가 들어갈 주소.
+		// (sendbuff + sizeof(struct ipheader) 이 위치에 (struct udpheader) 타입의 포인터를 캐스팅하게 되면
+		// sendbuff 1byte씩 이용하는 struct udpheader 타입의 구조체 변수를 그대로 이용할 수 있게 됨
+
+
+	// 여기서 이제 데이터 영역으로 넘어가보자
+
+
+	char* udp_data_p = (sendbuff + sizeof(struct ipheader) + sizeof(struct udpheader));
+	// sendbuff 주소에 + sizeof(struct ipheader) : 이거 크기 더하고,  sizeof(struct udpheader) 이거 크기 더해서
+	// 데이터 영역의 시작 주소 (udp_data) fmf rkflzlrh
+	// char* udp_data_p : char 타입의 포인터 변수 udp_data_p 선언.
+	// udp 토탈 길이는 ip 빼고 
+
+
+	int ip_total_length = sizeof(struct ipheader) + sizeof(struct udpheader) + udp_data_len; // ip header + udp header + data length
+
+
+	//=================================================================
+	// IP header
+	// 포맷 테이블에 있는 거 다 정해주는 거
+	//
+	ip_header_p->iph_ver = 4; // IP version : IPv4
+	ip_header_p->iph_ver = 5; // IP header length : 5 * 4 = 20 bytes
+	ip_header_p->iph_tos = 0; // Type of Service : 0
+	ip_header_p->iph_ihl = ip_total_length; // Total Length : 이더넷 frame header를 제외한 모든 데이터 길이 (IP header + UDP header + data)
+	ip_header_p->iph_ident = 0;
+	ip_header_p->iph_flag = 0;
+	ip_header_p->iph_offset = 0;
+	ip_header_p->iph_ttl = 64;
+	ip_header_p->iph_protocol = IPPROTO_UDP; // Protocol : UDP
+	ip_header_p->iph_checksum = 0;
+	ip_header_p->iph_sourceip.s_addr = inet_addr(DEST_IP);  //inet_addr은 DEST_IP 주소를 s_addr에 사용가능한 형태로 바꿔주는 것
+	ip_header_p->iph_destip.s_addr = inet_addr(DEST_IP);
+
+
+
+
+
 
 	//-----------------------------------
 	// IP
